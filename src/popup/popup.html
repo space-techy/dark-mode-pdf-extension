@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Lumen PDF</title>
+  <link rel="stylesheet" href="popup.css">
+  <script type="module" src="popup.js"></script>
+</head>
+<body>
+  <header>
+    <img src="../icons/icon-48.png" alt="" width="24" height="24">
+    <div>
+      <div class="title">Lumen PDF</div>
+      <div class="subtitle">Comfortable reading for every PDF</div>
+    </div>
+  </header>
+
+  <button class="primary" id="openTab" hidden>Open this PDF in Lumen</button>
+
+  <section>
+    <div class="label">Reading theme</div>
+    <div class="swatches" id="swatches"></div>
+  </section>
+
+  <section class="rows">
+    <label class="row"><span>Open PDFs automatically</span><input type="checkbox" class="switch" id="autoOpen"></label>
+    <label class="row"><span>Keep image colours natural</span><input type="checkbox" class="switch" id="keepImages"></label>
+  </section>
+
+  <button class="ghost" id="openLocal">Open a PDF from your device</button>
+</body>
+</html>

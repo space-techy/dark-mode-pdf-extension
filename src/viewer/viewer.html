@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lumen PDF</title>
+  <link rel="icon" href="../icons/icon-32.png">
+  <link rel="stylesheet" href="viewer.css">
+  <script type="module" src="viewer.js"></script>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-sidebar" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M9.5 4.5v15"/></symbol>
+      <symbol id="i-up" viewBox="0 0 24 24"><path d="m6.5 14.5 5.5-5.5 5.5 5.5"/></symbol>
+      <symbol id="i-down" viewBox="0 0 24 24"><path d="m6.5 9.5 5.5 5.5 5.5-5.5"/></symbol>
+      <symbol id="i-minus" viewBox="0 0 24 24"><path d="M6 12h12"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M6 12h12M12 6v12"/></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></symbol>
+      <symbol id="i-theme" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor"/></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19.5h14"/></symbol>
+      <symbol id="i-more" viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="18" cy="12" r="1.2" fill="currentColor"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="m7 7 10 10M17 7 7 17"/></symbol>
+      <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3.5H7.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8z"/><path d="M14 3.5V8h4.5"/></symbol>
+    </defs>
+  </svg>
+
+  <header class="toolbar">
+    <div class="tb-group">
+      <button class="icon" id="sidebarToggle" title="Contents (O)" aria-label="Toggle contents"><svg><use href="#i-sidebar"/></svg></button>
+      <div class="doc-title" id="docTitle">Lumen PDF</div>
+    </div>
+
+    <div class="tb-group tb-center">
+      <div class="pill">
+        <button class="icon" id="prevPage" title="Previous page" aria-label="Previous page"><svg><use href="#i-up"/></svg></button>
+        <input id="pageInput" class="page-input" inputmode="numeric" value="–" aria-label="Page number">
+        <span class="muted">/ <span id="pageCount">–</span></span>
+        <button class="icon" id="nextPage" title="Next page" aria-label="Next page"><svg><use href="#i-down"/></svg></button>
+      </div>
+      <div class="pill">
+        <button class="icon" id="zoomOut" title="Zoom out (Ctrl −)" aria-label="Zoom out"><svg><use href="#i-minus"/></svg></button>
+        <button class="zoom-label" id="zoomLabel" aria-haspopup="menu">100%</button>
+        <button class="icon" id="zoomIn" title="Zoom in (Ctrl +)" aria-label="Zoom in"><svg><use href="#i-plus"/></svg></button>
+      </div>
+    </div>
+
+    <div class="tb-group tb-end">
+      <button class="icon" id="searchToggle" title="Search (Ctrl F)" aria-label="Search"><svg><use href="#i-search"/></svg></button>
+      <button class="theme-btn" id="themeToggle" title="Reading theme (T)" aria-haspopup="dialog">
+        <span class="theme-dot" id="themeDot"></span><span id="themeName">Dark</span>
+      </button>
+      <button class="primary" id="downloadBtn" title="Download themed PDF (D)"><svg><use href="#i-download"/></svg><span>Download</span></button>
+      <button class="icon" id="moreToggle" title="More" aria-haspopup="menu" aria-label="More options"><svg><use href="#i-more"/></svg></button>
+    </div>
+  </header>
+  <div class="progress" aria-hidden="true"><div id="readProgress"></div></div>
+
+  <div class="searchbar" id="searchbar" hidden>
+    <svg class="muted"><use href="#i-search"/></svg>
+    <input id="searchInput" placeholder="Find in document" autocomplete="off" spellcheck="false">
+    <span class="muted search-count" id="searchCount"></span>
+    <button class="icon" id="searchPrev" title="Previous match (Shift Enter)" aria-label="Previous match"><svg><use href="#i-up"/></svg></button>
+    <button class="icon" id="searchNext" title="Next match (Enter)" aria-label="Next match"><svg><use href="#i-down"/></svg></button>
+    <button class="icon" id="searchClose" title="Close (Esc)" aria-label="Close search"><svg><use href="#i-close"/></svg></button>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Contents">
+      <div class="sidebar-head">Contents</div>
+      <nav id="outline"></nav>
+    </aside>
+    <main id="viewer" tabindex="-1">
+      <div id="pages"></div>
+      <div class="empty" id="empty" hidden>
+        <div class="empty-card">
+          <svg class="empty-icon"><use href="#i-file"/></svg>
+          <h1>Read PDFs your way</h1>
+          <p class="muted">Drop a PDF anywhere, or pick one from your device.</p>
+          <button class="primary" id="emptyOpen">Open PDF</button>
+          <p class="muted small" id="emptyError"></p>
+        </div>
+      </div>
+      <div class="loader" id="loader" hidden><div class="loader-bar"><div id="loaderFill"></div></div></div>
+    </main>
+  </div>
+
+  <div class="menu" id="zoomMenu" role="menu" hidden>
+    <button data-zoom="auto">Automatic</button>
+    <button data-zoom="page-width">Fit width</button>
+    <button data-zoom="page-fit">Fit page</button>
+    <hr>
+    <button data-zoom="0.75">75%</button>
+    <button data-zoom="1">100%</button>
+    <button data-zoom="1.25">125%</button>
+    <button data-zoom="1.5">150%</button>
+    <button data-zoom="2">200%</button>
+  </div>
+
+  <div class="menu" id="moreMenu" role="menu" hidden>
+    <button id="openFile">Open file…</button>
+    <button id="downloadOriginal">Download original</button>
+    <button id="viewOriginal">Open in browser viewer</button>
+    <hr>
+    <div class="shortcuts">
+      <div><kbd>T</kbd> next theme</div>
+      <div><kbd>D</kbd> download</div>
+      <div><kbd>O</kbd> contents</div>
+      <div><kbd>Ctrl</kbd><kbd>F</kbd> search</div>
+      <div><kbd>←</kbd><kbd>→</kbd> pages</div>
+      <div><kbd>Ctrl</kbd><kbd>±</kbd> zoom</div>
+    </div>
+  </div>
+
+  <section class="panel" id="themePanel" role="dialog" aria-label="Reading theme" hidden>
+    <div class="panel-section">
+      <div class="panel-title">Reading theme</div>
+      <div class="swatches" id="swatches"></div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-title">Create your own</div>
+      <div class="custom-row">
+        <label class="color-field"><input type="color" id="customBg" value="#1d2026"><span>Background</span></label>
+        <label class="color-field"><input type="color" id="customFg" value="#e8dcc6"><span>Text</span></label>
+        <div class="custom-preview" id="customPreview">Aa</div>
+      </div>
+      <div class="custom-row">
+        <input class="text-input" id="customName" placeholder="Theme name" maxlength="24">
+        <button class="primary small" id="customSave">Save</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-title">Images</div>
+      <label class="switch-row"><span>Keep image colours natural</span><input type="checkbox" class="switch" id="keepImages"></label>
+      <label class="switch-row"><span>Theme scanned pages</span><input type="checkbox" class="switch" id="scannedAsText"></label>
+      <label class="slider-row"><span>Image brightness</span><input type="range" id="imageBrightness" min="40" max="100" step="5"><output id="imageBrightnessValue"></output></label>
+    </div>
+  </section>
+
+  <dialog class="dialog" id="exportDialog">
+    <form method="dialog">
+      <div class="dialog-head">
+        <h2>Download themed PDF</h2>
+        <button class="icon" value="cancel" aria-label="Close"><svg><use href="#i-close"/></svg></button>
+      </div>
+      <div class="panel-title">Theme</div>
+      <div class="swatches compact" id="exportSwatches"></div>
+
+      <div class="panel-title">Format</div>
+      <div class="segmented" id="exportFormat">
+        <label><input type="radio" name="format" value="vector" checked><span><b>Crisp</b><small>Selectable text · small file</small></span></label>
+        <label><input type="radio" name="format" value="image"><span><b>Exact</b><small>Pixel-perfect · larger file</small></span></label>
+      </div>
+      <div class="segmented" id="exportQuality" hidden>
+        <label><input type="radio" name="quality" value="standard" checked><span><b>Standard</b><small>150 dpi</small></span></label>
+        <label><input type="radio" name="quality" value="high"><span><b>High</b><small>220 dpi</small></span></label>
+      </div>
+
+      <div class="export-progress" id="exportProgress" hidden><div id="exportFill"></div></div>
+      <p class="muted small" id="exportNote"></p>
+      <div class="dialog-actions">
+        <button class="ghost" value="cancel">Cancel</button>
+        <button class="primary" id="exportStart" value="default" autofocus>Download</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="dialog narrow" id="passwordDialog">
+    <form method="dialog">
+      <h2>Protected document</h2>
+      <p class="muted small" id="passwordHint">Enter the password to open this PDF.</p>
+      <input class="text-input" type="password" id="passwordInput" autocomplete="off">
+      <div class="dialog-actions">
+        <button class="ghost" value="cancel">Cancel</button>
+        <button class="primary" value="ok">Open</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="drop-overlay" id="dropOverlay" hidden>Drop to open</div>
+  <div class="toast" id="toast" role="status" hidden></div>
+  <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "lumen-pdf",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Eye-friendly PDF reading with themes, custom colors and themed PDF export.",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:zip": "node scripts/build.mjs --zip"
+  },
+  "dependencies": {
+    "pdf-lib": "1.17.1",
+    "pdfjs-dist": "4.10.38"
+  }
+}
